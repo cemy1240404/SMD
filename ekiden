@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track & Field Team Hub Pro | 陸上部・ランニングチーム管理システム</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Noto Sans JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ヘッダー -->
+    <header class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/15 p-2 rounded-xl backdrop-blur-md">
+                    <i class="fa-solid fa-person-running text-2xl text-amber-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
+                        Track & Field Hub <span class="text-xs bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full">PRO</span>
+                    </h1>
+                    <p class="text-[11px] text-emerald-100">陸上部・ランニングチーム総合記録 & インターバル分析アプリ</p>
+                </div>
+            </div>
+            
+            <!-- ナビゲーションタブボタン (デスクトップ) -->
+            <nav class="hidden lg:flex items-center space-x-1 bg-black/10 p-1.5 rounded-xl backdrop-blur-sm">
+                <button onclick="switchTab('records')" id="nav-records" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-sm">
+                    <i class="fa-solid fa-clipboard-list mr-1"></i> 練習記録
+                </button>
+                <button onclick="switchTab('batch')" id="nav-batch" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-white hover:bg-white/10">
+                    <i class="fa-solid fa-users-rectangle mr-1"></i> 全体一括入力
+                </button>
+                <button onclick="switchTab('condition')" id="nav-condition" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-white hover:bg-white/10 relative">
+                    <i class="fa-solid fa-heart-pulse mr-1"></i> コンディション
+                    <span id="alert-badge-top" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button onclick="switchTab('ranking')" id="nav-ranking" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-white hover:bg-white/10">
+                    <i class="fa-solid fa-trophy mr-1"></i> 2.6km TT
+                </button>
+                <button onclick="switchTab('calculator')" id="nav-calculator" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-white hover:bg-white/10">
+                    <i class="fa-solid fa-calculator mr-1"></i> ペース計算
+                </button>
+                <button onclick="switchTab('members')" id="nav-members" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-white hover:bg-white/10">
+                    <i class="fa-solid fa-user-group mr-1"></i> メンバー
+                </button>
+            </nav>
+
+            <!-- 管理者ログイン / ステータス -->
+            <div class="flex items-center space-x-2">
+                <div id="admin-status-badge" class="hidden items-center bg-amber-400 text-slate-900 text-xs px-2.5 py-1 rounded-full font-bold shadow">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> 管理者
+                </div>
+                <button onclick="openAdminModal()" id="admin-toggle-btn" class="bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-lock" id="admin-btn-icon"></i> <span id="admin-btn-text">管理者ログイン</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- モバイル用ナビゲーションタブバー -->
+        <div class="lg:hidden flex overflow-x-auto px-3 py-2 bg-emerald-900/30 gap-1 border-t border-white/10 scrollbar-none">
+            <button onclick="switchTab('records')" id="mob-nav-records" class="mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold bg-white text-emerald-800">
+                <i class="fa-solid fa-clipboard-list mr-1"></i> 練習記録
+            </button>
+            <button onclick="switchTab('batch')" id="mob-nav-batch" class="mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold text-white hover:bg-white/10">
+                <i class="fa-solid fa-users-rectangle mr-1"></i> 一括入力
+            </button>
+            <button onclick="switchTab('condition')" id="mob-nav-condition" class="mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold text-white hover:bg-white/10 relative">
+                <i class="fa-solid fa-heart-pulse mr-1"></i> コンディション
+                <span id="alert-badge-mob" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] px-1 py-0.2 rounded-full hidden">0</span>
+            </button>
+            <button onclick="switchTab('ranking')" id="mob-nav-ranking" class="mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold text-white hover:bg-white/10">
+                <i class="fa-solid fa-trophy mr-1"></i> 2.6km TT
+            </button>
+            <button onclick="switchTab('calculator')" id="mob-nav-calculator" class="mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold text-white hover:bg-white/10">
+                <i class="fa-solid fa-calculator mr-1"></i> 計算機
+            </button>
+            <button onclick="switchTab('members')" id="mob-nav-members" class="mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold text-white hover:bg-white/10">
+                <i class="fa-solid fa-user-group mr-1"></i> メンバー
+            </button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ領域 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+        <!-- チーム統計ダッシュボード -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">総練習記録数</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-0.5" id="stat-total-records">0 <span class="text-xs font-normal text-slate-500">件</span></h3>
+                </div>
+                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">チーム累計距離</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-0.5" id="stat-total-distance">0.0 <span class="text-xs font-normal text-slate-500">km</span></h3>
+                </div>
+                <div class="w-10 h-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">登録メンバー数</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-0.5" id="stat-total-members">0 <span class="text-xs font-normal text-slate-500">名</span></h3>
+                </div>
+                <div class="w-10 h-10 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不調・けがアラート通知バナー -->
+        <div id="alert-banner" class="hidden bg-rose-50 border-l-4 border-rose-500 p-3.5 rounded-xl shadow-sm flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="text-rose-500 text-lg">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-rose-800 text-xs sm:text-sm">コンディション注意アラート</h4>
+                    <p class="text-xs text-rose-700" id="alert-banner-text">不調またはけがを報告しているメンバーがいます。</p>
+                </div>
+            </div>
+            <button onclick="switchTab('condition')" class="text-xs font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 px-3 py-1 rounded-lg transition-all whitespace-nowrap">
+                確認
+            </button>
+        </div>
+
+        <!-- ================= TAB 1: 練習記録・入力 ================= -->
+        <div id="tab-content-records" class="tab-content space-y-5">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                
+                <!-- 記録投稿フォーム (6カラム) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 lg:col-span-6 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square text-emerald-600"></i> 個別練習記録の登録
+                        </h2>
+                        <!-- 種別切り替えタブ -->
+                        <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                            <button type="button" id="type-btn-normal" onclick="setPracticeType('normal')" class="px-3 py-1 rounded-lg transition-all bg-white text-emerald-700 shadow-xs">通常走・距離走</button>
+                            <button type="button" id="type-btn-interval" onclick="setPracticeType('interval')" class="px-3 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900">インターバル</button>
+                        </div>
+                    </div>
+
+                    <form id="record-form" onsubmit="handleRecordSubmit(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">日付</label>
+                                <input type="date" id="rec-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">名前</label>
+                                <input type="text" id="rec-name" list="member-datalist" placeholder="選択または直接入力" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <datalist id="member-datalist"></datalist>
+                            </div>
+                        </div>
+
+                        <!-- ワンタップ名前タグ -->
+                        <div>
+                            <span class="text-[11px] font-semibold text-slate-400 block mb-1">クイック名前選択:</span>
+                            <div id="quick-tag-container" class="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                <span class="text-xs text-slate-400 italic">※メンバータブで名前を追加するとここに表示されます</span>
+                            </div>
+                        </div>
+
+                        <!-- メニュー＆クイックボタン -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">練習メニュー名</label>
+                            <input type="text" id="rec-menu" placeholder="例: 10kmジョグ, 2.6km TT, 400m×10本" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-1.5">
+                            <div class="flex flex-wrap gap-1">
+                                <button type="button" onclick="setQuickMenu('2.6km タイムトライアル', 2.6, 'normal')" class="text-[11px] bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-lg border border-amber-200">2.6km TT</button>
+                                <button type="button" onclick="setQuickMenu('5km ペース走', 5.0, 'normal')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg">5km ペース走</button>
+                                <button type="button" onclick="setQuickMenu('10km ジョグ', 10.0, 'normal')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg">10km ジョグ</button>
+                                <button type="button" onclick="setQuickMenu('1000m×5 インターバル', 1.0, 'interval', 5)" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg border border-emerald-200">1000m×5本</button>
+                                <button type="button" onclick="setQuickMenu('400m×10 インターバル', 0.4, 'interval', 10)" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg border border-emerald-200">400m×10本</button>
+                            </div>
+                        </div>
+
+                        <!-- 通常走行モード用フィールド -->
+                        <div id="section-normal-input" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">走行距離 (km)</label>
+                                    <input type="number" step="0.01" id="rec-distance" placeholder="10.0" oninput="calculateNormalPacePreview()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">タイム (数字入力可: 923→9'23")</label>
+                                    <input type="text" id="rec-time" placeholder="4230 (42'30&quot;)" onblur="formatSmartTimeInput(this); calculateNormalPacePreview()" oninput="calculateNormalPacePreview()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- インターバル練習モード用フィールド -->
+                        <div id="section-interval-input" class="hidden space-y-3 bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-100">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-emerald-800"><i class="fa-solid fa-list-ol mr-1"></i> インターバル本数 & タイム設定</span>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="changeIntervalCount(-1)" class="w-7 h-7 bg-white hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 text-xs flex items-center justify-center">-</button>
+                                    <button type="button" onclick="changeIntervalCount(1)" class="w-7 h-7 bg-white hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 text-xs flex items-center justify-center">+</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">1本あたりの距離 (km)</label>
+                                    <input type="number" step="0.01" id="int-single-dist" value="0.4" oninput="recalcIntervalStats()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">本数</label>
+                                    <input type="number" id="int-count" value="5" min="1" max="20" onchange="renderIntervalRows()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+
+                            <!-- 各本のタイム入力グリッド -->
+                            <div id="interval-times-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
+                                <!-- 動的生成 -->
+                            </div>
+
+                            <!-- インターバル自動統計プレビュー -->
+                            <div class="bg-white p-2.5 rounded-xl border border-emerald-200 grid grid-cols-3 gap-2 text-center text-xs">
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-semibold">平均タイム</div>
+                                    <div class="font-extrabold text-emerald-700" id="int-stat-avg">0'00"</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-semibold">合計距離 / タイム</div>
+                                    <div class="font-bold text-slate-800" id="int-stat-total">0.0km / 0'00"</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-semibold">平均ペース</div>
+                                    <div class="font-bold text-teal-700" id="int-stat-pace">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 共通ペース算出プレビュー -->
+                        <div id="normal-pace-box" class="bg-emerald-50 border border-emerald-100 rounded-xl p-2.5 flex items-center justify-between text-xs text-emerald-800">
+                            <span class="font-bold"><i class="fa-solid fa-gauge-high mr-1"></i> 平均ペース自動算出:</span>
+                            <span id="pace-preview" class="font-black text-sm text-emerald-700">-</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">コンディション</label>
+                                <select id="rec-condition" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="良好">$D83D$DFE2 良好（絶好調）</option>
+                                    <option value="普通">$D83D$DFE1 普通（通常運転）</option>
+                                    <option value="不調">$D83D$DFE0 不調（疲れ・倦怠感）</option>
+                                    <option value="けが">$D83D$DD34 けが（痛み・故障）</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">感想メモタグ (タップで挿入)</label>
+                                <div class="flex flex-wrap gap-1">
+                                    <button type="button" onclick="appendCommentTag('感覚良し！')" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-700">+感覚良し</button>
+                                    <button type="button" onclick="appendCommentTag('ラストスパート成功')" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-700">+ラスト成功</button>
+                                    <button type="button" onclick="appendCommentTag('後半失速')" class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-700">+後半失速</button>
+                                    <button type="button" onclick="appendCommentTag('足に違和感あり')" class="text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-0.5 rounded border border-rose-200">+足に違和感</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <textarea id="rec-comment" rows="2" placeholder="今日の練習の感想、反省、メモ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-3 rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i> 記録を保存する
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 練習記録一覧 (6カラム) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 lg:col-span-6 flex flex-col space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-100">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul text-emerald-600"></i> タイムライン & 詳細
+                        </h2>
+                        <!-- フィルター -->
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <input type="text" id="record-search" oninput="renderRecordsList()" placeholder="検索..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-36">
+                            <select id="record-filter-cond" onchange="renderRecordsList()" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="">すべて</option>
+                                <option value="良好">良好</option>
+                                <option value="普通">普通</option>
+                                <option value="不調">不調</option>
+                                <option value="けが">けが</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="records-list-container" class="space-y-3 overflow-y-auto max-h-[620px] pr-1">
+                        <!-- 動的挿入 -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: 全体練習一括入力 ================= -->
+        <div id="tab-content-batch" class="tab-content hidden space-y-5">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-users-rectangle text-teal-600"></i> 全体練習 一括入力 (個別本数・タイム対応)
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">共通メニューを設定し、メンバーごとの本数や各本タイムを個別調整して一斉保存できます。</p>
+                    </div>
+                    
+                    <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                        <button type="button" id="batch-type-normal" onclick="setBatchType('normal')" class="px-3 py-1 rounded-lg transition-all bg-white text-teal-700 shadow-xs">通常走行一括</button>
+                        <button type="button" id="batch-type-interval" onclick="setBatchType('interval')" class="px-3 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900">インターバル一括</button>
+                    </div>
+                </div>
+
+                <!-- 共通ヘッダー設定 -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">共通日付</label>
+                        <input type="date" id="batch-date" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">共通メニュー名</label>
+                        <input type="text" id="batch-menu" placeholder="例: 1000m×5本 または 8km ペース走" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1" id="batch-dist-label">共通走行距離 (km)</label>
+                        <input type="number" step="0.01" id="batch-distance" placeholder="例: 1.0 (インターバル1本分)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs text-slate-500 uppercase bg-slate-50/50">
+                                <th class="py-2.5 px-3">メンバー</th>
+                                <th class="py-2.5 px-3" id="batch-th-time">タイム / 本数入力</th>
+                                <th class="py-2.5 px-3">計算結果 (合計 / 平均)</th>
+                                <th class="py-2.5 px-3">体調</th>
+                                <th class="py-2.5 px-3">一言メモ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batch-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- 動的メンバー一覧 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-5 flex justify-end">
+                    <button onclick="handleBatchSubmit()" class="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-black px-6 py-3 rounded-xl shadow-md transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> 一括練習データを登録する
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: 体調・コンディション管理 ================= -->
+        <div id="tab-content-condition" class="tab-content hidden space-y-5">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-heart-pulse text-rose-500"></i> コンディション監視ボード
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">最新の投稿から各メンバーの怪我・不調ステータスを追跡します。</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5" id="condition-cards-container">
+                    <!-- 動的挿入 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: 2.6km タイムトライアルランキング ================= -->
+        <div id="tab-content-ranking" class="tab-content hidden space-y-5">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-500"></i> 本番区間 (2.6km) タイムトライアルランキング
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">メニュー名に「2.6km」を含む記録または2.5$301C2.7kmのタイムから自己ベストを集計します。</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 uppercase">
+                                <th class="py-2.5 px-3 w-14 text-center">順位</th>
+                                <th class="py-2.5 px-3">名前</th>
+                                <th class="py-2.5 px-3">自己ベスト</th>
+                                <th class="py-2.5 px-3">平均ペース</th>
+                                <th class="py-2.5 px-3">記録日</th>
+                                <th class="py-2.5 px-3">メモ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- 動的挿入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 5: ペース計算ツール ================= -->
+        <div id="tab-content-calculator" class="tab-content hidden space-y-5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <!-- ペース換算機 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-3">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-cyan-600"></i> ペース・タイム計算機
+                    </h2>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">距離 (km)</label>
+                        <input type="number" step="0.01" id="calc-distance" value="5.0" oninput="runCalculator()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">合計タイム (数字入力可: 2030 → 20'30")</label>
+                        <input type="text" id="calc-time" value="2030" onblur="formatSmartTimeInput(this); runCalculator()" oninput="runCalculator()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+
+                    <div class="bg-gradient-to-br from-cyan-600 to-teal-600 text-white rounded-2xl p-4 shadow-sm space-y-2">
+                        <p class="text-[10px] uppercase tracking-wider text-cyan-100 font-bold">計算結果</p>
+                        <div class="flex justify-between items-center border-b border-white/20 pb-2">
+                            <span class="text-xs">1km平均ペース</span>
+                            <span class="text-2xl font-black" id="calc-result-pace">-</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs">時速</span>
+                            <span class="text-xs font-bold" id="calc-result-speed">- km/h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 距離別予測タイム早見表 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-clock text-cyan-600"></i> 距離別タイム予測
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 uppercase bg-slate-50">
+                                    <th class="py-2 px-3">種目</th>
+                                    <th class="py-2 px-3">予測タイム</th>
+                                </tr>
+                            </thead>
+                            <tbody id="estimation-table-body" class="divide-y divide-slate-100">
+                                <!-- 動的挿入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 6: メンバー管理 ================= -->
+        <div id="tab-content-members" class="tab-content hidden space-y-5">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-user-group text-emerald-600"></i> メンバー管理
+                </h2>
+
+                <form onsubmit="handleAddMember(event)" class="flex gap-2 max-w-md mb-5">
+                    <input type="text" id="new-member-name" placeholder="新しいメンバー名" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all whitespace-nowrap shadow-xs">
+                        <i class="fa-solid fa-user-plus mr-1"></i> 追加
+                    </button>
+                </form>
+
+                <div id="members-grid-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <!-- 動的挿入 -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-white border-t border-slate-200 mt-10 py-5 text-center text-xs text-slate-400">
+        <p>Track & Field Hub PRO &copy; 2026 - 陸上・ランニングチーム管理システム</p>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+    <!-- 管理者認証 & 初期化 モーダル -->
+    <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-amber-500"></i> 管理者モード
+                </h3>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div id="admin-login-view" class="space-y-3">
+                <input type="password" id="admin-password-input" placeholder="パスワードを入力 (admin)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <div class="flex gap-2">
+                    <button onclick="verifyAdminLogin()" class="flex-grow bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 rounded-xl text-xs transition-all shadow-xs">
+                        認証
+                    </button>
+                    <button onclick="closeAdminModal()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold">
+                        キャンセル
+                    </button>
+                </div>
+            </div>
+
+            <div id="admin-logout-view" class="space-y-4 hidden">
+                <p class="text-xs text-slate-600">現在、管理者モードでログインしています。記録やメンバーの削除権限が有効です。</p>
+                
+                <div class="pt-2 border-t border-slate-100">
+                    <button onclick="clearAllData()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2.5 px-3 rounded-xl text-xs border border-rose-200 transition-all flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-trash-arrow-up"></i> 全データをクリアして完全初期化
+                    </button>
+                </div>
+
+                <button onclick="handleAdminLogout()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 rounded-xl text-xs">
+                    ログアウト
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs pointer-events-none"></div>
+
+    <script>
+        // 完全クリーンな初期状態（サンプルデータなし）
+        let state = {
+            members: JSON.parse(localStorage.getItem('tf_members')) || [],
+            records: JSON.parse(localStorage.getItem('tf_records')) || [],
+            isAdmin: JSON.parse(localStorage.getItem('tf_isAdmin')) || false,
+            currentTab: 'records',
+            practiceType: 'normal',
+            batchType: 'normal'
+        };
+
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('rec-date').value = today;
+            document.getElementById('batch-date').value = today;
+
+            renderIntervalRows();
+            syncStorage();
+            updateUI();
+        };
+
+        function saveToStorage() {
+            localStorage.setItem('tf_members', JSON.stringify(state.members));
+            localStorage.setItem('tf_records', JSON.stringify(state.records));
+            localStorage.setItem('tf_isAdmin', JSON.stringify(state.isAdmin));
+        }
+
+        function syncStorage() {
+            saveToStorage();
+        }
+
+        function updateUI() {
+            renderStatistics();
+            renderAlertBanner();
+            renderRecordsList();
+            renderQuickTags();
+            renderMemberDatalist();
+            renderBatchTable();
+            renderConditionCards();
+            renderRankingTable();
+            renderMembersGrid();
+            runCalculator();
+            updateAdminUIState();
+        }
+
+        // 全データのクリア初期化
+        function clearAllData() {
+            if (confirm("【警告】すべての練習記録およびメンバー一覧を完全に削除して初期化しますか？この操作は取り消せません。")) {
+                state.members = [];
+                state.records = [];
+                syncStorage();
+                updateUI();
+                closeAdminModal();
+                showToast("全データを消去し、アプリを初期化しました。", "success");
+            }
+        }
+
+        function formatSmartTimeInput(inputEl) {
+            let val = inputEl.value.trim();
+            if (!val) return;
+
+            val = val.replace(/["'h:]/g, '');
+            if (!/^\d+$/.test(val)) return;
+
+            let num = parseInt(val, 10);
+            let result = "";
+
+            if (val.length <= 2) {
+                if (num >= 60) {
+                    let m = Math.floor(num / 60);
+                    let s = num % 60;
+                    result = `${m}'${s < 10 ? '0' : ''}${s}"`;
+                } else {
+                    result = `0'${num < 10 ? '0' : ''}${num}"`;
+                }
+            } else if (val.length === 3) {
+                let m = parseInt(val.substring(0, 1), 10);
+                let s = parseInt(val.substring(1, 3), 10);
+                if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
+                result = `${m}'${s < 10 ? '0' : ''}${s}"`;
+            } else if (val.length === 4) {
+                let m = parseInt(val.substring(0, 2), 10);
+                let s = parseInt(val.substring(2, 4), 10);
+                if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
+                result = `${m}'${s < 10 ? '0' : ''}${s}"`;
+            } else if (val.length >= 5) {
+                let h = parseInt(val.substring(0, val.length - 4), 10);
+                let m = parseInt(val.substring(val.length - 4, val.length - 2), 10);
+                let s = parseInt(val.substring(val.length - 2), 10);
+                result = `${h}h${m < 10 ? '0' : ''}${m}'${s < 10 ? '0' : ''}${s}"`;
+            }
+
+            inputEl.value = result;
+        }
+
+        function parseTimeToSeconds(timeStr) {
+            if (!timeStr) return 0;
+            let str = timeStr.trim();
+            
+            let hours = 0;
+            if (str.includes('h')) {
+                let hParts = str.split('h');
+                hours = parseInt(hParts[0], 10) || 0;
+                str = hParts[1] || '';
+            }
+
+            let clean = str.replace(/["']/g, ':').replace(/:$/, '');
+            let parts = clean.split(':');
+            
+            let mins = 0, secs = 0;
+            if (parts.length === 2) {
+                mins = parseInt(parts[0], 10) || 0;
+                secs = parseInt(parts[1], 10) || 0;
+            } else if (parts.length === 1) {
+                secs = parseInt(parts[0], 10) || 0;
+            }
+
+            return hours * 3600 + mins * 60 + secs;
+        }
+
+        function formatSecondsToTimeStr(totalSec) {
+            if (!totalSec || isNaN(totalSec) || totalSec <= 0) return "0'00\"";
+            
+            let h = Math.floor(totalSec / 3600);
+            let rem = totalSec % 3600;
+            let m = Math.floor(rem / 60);
+            let s = Math.round(rem % 60);
+
+            if (h > 0) {
+                return `${h}h${m < 10 ? '0' : ''}${m}'${s < 10 ? '0' : ''}${s}"`;
+            }
+            return `${m}'${s < 10 ? '0' : ''}${s}"`;
+        }
+
+        function calculatePace(distanceKm, timeSec) {
+            if (!distanceKm || distanceKm <= 0 || !timeSec || timeSec <= 0) return "-";
+            let secPerKm = timeSec / distanceKm;
+            let m = Math.floor(secPerKm / 60);
+            let s = Math.round(secPerKm % 60);
+            return `${m}'${s < 10 ? '0' : ''}${s}"/km`;
+        }
+
+        function setPracticeType(type) {
+            state.practiceType = type;
+            const btnNormal = document.getElementById('type-btn-normal');
+            const btnInterval = document.getElementById('type-btn-interval');
+            const secNormal = document.getElementById('section-normal-input');
+            const secInterval = document.getElementById('section-interval-input');
+            const paceBox = document.getElementById('normal-pace-box');
+
+            if (type === 'normal') {
+                btnNormal.className = "px-3 py-1 rounded-lg transition-all bg-white text-emerald-700 shadow-xs";
+                btnInterval.className = "px-3 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                secNormal.classList.remove('hidden');
+                secInterval.classList.add('hidden');
+                paceBox.classList.remove('hidden');
+            } else {
+                btnInterval.className = "px-3 py-1 rounded-lg transition-all bg-white text-emerald-700 shadow-xs";
+                btnNormal.className = "px-3 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                secNormal.classList.add('hidden');
+                secInterval.classList.remove('hidden');
+                paceBox.classList.add('hidden');
+                recalcIntervalStats();
+            }
+        }
+
+        function renderIntervalRows() {
+            const count = parseInt(document.getElementById('int-count').value, 10) || 5;
+            const container = document.getElementById('interval-times-grid');
+            
+            const existingVals = [];
+            container.querySelectorAll('input').forEach(i => existingVals.push(i.value));
+
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const val = existingVals[i] || '';
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-1';
+                div.innerHTML = `
+                    <span class="text-[10px] font-bold text-slate-400 w-5">${i + 1}.</span>
+                    <input type="text" placeholder="例: 70" value="${val}" onblur="formatSmartTimeInput(this); recalcIntervalStats()" oninput="recalcIntervalStats()" class="int-time-input w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                `;
+                container.appendChild(div);
+            }
+            recalcIntervalStats();
+        }
+
+        function changeIntervalCount(delta) {
+            const el = document.getElementById('int-count');
+            let current = parseInt(el.value, 10) || 5;
+            let updated = Math.max(1, Math.min(20, current + delta));
+            el.value = updated;
+            renderIntervalRows();
+        }
+
+        function recalcIntervalStats() {
+            const singleDist = parseFloat(document.getElementById('int-single-dist').value) || 0;
+            const timeInputs = document.querySelectorAll('.int-time-input');
+            
+            let totalSec = 0;
+            let validCount = 0;
+
+            timeInputs.forEach(input => {
+                let sec = parseTimeToSeconds(input.value);
+                if (sec > 0) {
+                    totalSec += sec;
+                    validCount++;
+                }
+            });
+
+            const avgSec = validCount > 0 ? totalSec / validCount : 0;
+            const totalDist = singleDist * validCount;
+            const pace = calculatePace(totalDist, totalSec);
+
+            document.getElementById('int-stat-avg').textContent = formatSecondsToTimeStr(avgSec);
+            document.getElementById('int-stat-total').textContent = `${totalDist.toFixed(2)}km / ${formatSecondsToTimeStr(totalSec)}`;
+            document.getElementById('int-stat-pace').textContent = pace;
+        }
+
+        function calculateNormalPacePreview() {
+            const dist = parseFloat(document.getElementById('rec-distance').value);
+            const timeVal = document.getElementById('rec-time').value;
+            const sec = parseTimeToSeconds(timeVal);
+            document.getElementById('pace-preview').textContent = calculatePace(dist, sec);
+        }
+
+        function setQuickMenu(menuName, defaultDist, type, defaultCount = 5) {
+            document.getElementById('rec-menu').value = menuName;
+            setPracticeType(type);
+            if (type === 'normal') {
+                document.getElementById('rec-distance').value = defaultDist;
+                calculateNormalPacePreview();
+            } else {
+                document.getElementById('int-single-dist').value = defaultDist;
+                document.getElementById('int-count').value = defaultCount;
+                renderIntervalRows();
+            }
+        }
+
+        function appendCommentTag(tagText) {
+            const textarea = document.getElementById('rec-comment');
+            if (textarea.value) {
+                textarea.value += ' ' + tagText;
+            } else {
+                textarea.value = tagText;
+            }
+        }
+
+        // RECORD FORM SUBMISSION
+        function handleRecordSubmit(e) {
+            e.preventDefault();
+            const date = document.getElementById('rec-date').value;
+            const name = document.getElementById('rec-name').value.trim();
+            const menu = document.getElementById('rec-menu').value.trim();
+            const condition = document.getElementById('rec-condition').value;
+            const comment = document.getElementById('rec-comment').value.trim();
+
+            if (!state.members.includes(name)) {
+                state.members.push(name);
+            }
+
+            let newRecord = {
+                id: 'rec_' + Date.now(),
+                date,
+                name,
+                menu,
+                type: state.practiceType,
+                condition,
+                comment
+            };
+
+            if (state.practiceType === 'normal') {
+                const distance = parseFloat(document.getElementById('rec-distance').value) || 0;
+                const timeVal = document.getElementById('rec-time').value;
+                const timeSec = parseTimeToSeconds(timeVal);
+                
+                newRecord.distance = distance;
+                newRecord.timeSec = timeSec;
+                newRecord.timeStr = formatSecondsToTimeStr(timeSec);
+                newRecord.paceStr = calculatePace(distance, timeSec);
+            } else {
+                const singleDist = parseFloat(document.getElementById('int-single-dist').value) || 0;
+                const inputs = document.querySelectorAll('.int-time-input');
+                let intervalTimes = [];
+                let intervalSecs = [];
+                let totalSec = 0;
+
+                inputs.forEach(inp => {
+                    let sec = parseTimeToSeconds(inp.value);
+                    if (sec > 0) {
+                        intervalSecs.push(sec);
+                        intervalTimes.push(formatSecondsToTimeStr(sec));
+                        totalSec += sec;
+                    }
+                });
+
+                const totalDist = singleDist * intervalSecs.length;
+                newRecord.singleDist = singleDist;
+                newRecord.intervalTimes = intervalTimes;
+                newRecord.intervalSecs = intervalSecs;
+                newRecord.distance = totalDist;
+                newRecord.timeSec = totalSec;
+                newRecord.timeStr = formatSecondsToTimeStr(totalSec);
+                newRecord.paceStr = calculatePace(totalDist, totalSec);
+            }
+
+            state.records.unshift(newRecord);
+            syncStorage();
+            updateUI();
+
+            showToast('練習記録を登録しました！', 'success');
+        }
+
+        function renderRecordsList() {
+            const container = document.getElementById('records-list-container');
+            const keyword = (document.getElementById('record-search')?.value || '').toLowerCase();
+            const condFilter = document.getElementById('record-filter-cond')?.value || '';
+
+            let filtered = state.records.filter(r => {
+                const matchSearch = r.name.toLowerCase().includes(keyword) || r.menu.toLowerCase().includes(keyword);
+                const matchCond = condFilter ? r.condition === condFilter : true;
+                return matchSearch && matchCond;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 px-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                        <i class="fa-solid fa-clipboard text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-xs font-bold text-slate-500">練習記録がまだありません</p>
+                        <p class="text-[11px] text-slate-400 mt-1">左側のフォームから最初の記録を投稿してみましょう！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(r => {
+                let badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                if (r.condition === '普通') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                if (r.condition === '不調') badgeColor = 'bg-orange-50 text-orange-700 border-orange-200';
+                if (r.condition === 'けが') badgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
+
+                const isInterval = r.type === 'interval';
+                let intervalDetailHtml = '';
+
+                if (isInterval && r.intervalTimes && r.intervalTimes.length > 0) {
+                    intervalDetailHtml = `
+                        <div class="mt-2 bg-emerald-50/60 p-2 rounded-xl border border-emerald-100 text-[11px] space-y-1">
+                            <div class="font-bold text-emerald-800 flex justify-between">
+                                <span>各本タイム (${r.intervalTimes.length}本):</span>
+                                <span>1本: ${r.singleDist}km</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                ${r.intervalTimes.map((t, idx) => `<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200 font-mono font-bold text-slate-700">${idx+1}本: ${t}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 hover:bg-white border border-slate-200 rounded-2xl p-3.5 transition-all shadow-xs space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-bold text-slate-400"><i class="fa-regular fa-calendar mr-1"></i>${r.date}</span>
+                            <span class="text-xs font-bold text-slate-800 bg-white px-2 py-0.5 rounded-lg border border-slate-200">${r.name}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full border font-bold ${badgeColor}">${r.condition}</span>
+                        </div>
+                        ${state.isAdmin ? `<button onclick="deleteRecord('${r.id}')" class="text-rose-500 hover:text-rose-700 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                    </div>
+
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                ${isInterval ? `<span class="bg-emerald-600 text-white text-[10px] px-1.5 py-0.2 rounded font-bold">INT</span>` : ''}
+                                ${r.menu}
+                            </h4>
+                            ${r.comment ? `<p class="text-xs text-slate-600 italic mt-0.5">"${r.comment}"</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-400 font-bold">${r.distance}km / 平均ペース</div>
+                            <div class="text-sm font-black text-emerald-700">${r.timeStr} <span class="text-xs text-slate-500 font-normal">(${r.paceStr})</span></div>
+                        </div>
+                    </div>
+                    ${intervalDetailHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // BATCH INPUT LOGIC
+        function setBatchType(type) {
+            state.batchType = type;
+            const btnNormal = document.getElementById('batch-type-normal');
+            const btnInterval = document.getElementById('batch-type-interval');
+            const labelDist = document.getElementById('batch-dist-label');
+
+            if (type === 'normal') {
+                btnNormal.className = "px-3 py-1 rounded-lg transition-all bg-white text-teal-700 shadow-xs";
+                btnInterval.className = "px-3 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                labelDist.textContent = "共通走行距離 (km)";
+            } else {
+                btnInterval.className = "px-3 py-1 rounded-lg transition-all bg-white text-teal-700 shadow-xs";
+                btnNormal.className = "px-3 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                labelDist.textContent = "インターバル1本分の距離 (km)";
+            }
+            renderBatchTable();
+        }
+
+        function renderBatchTable() {
+            const tbody = document.getElementById('batch-table-body');
+            tbody.innerHTML = '';
+
+            if (state.members.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-8 text-xs text-slate-400">
+                            登録されたメンバーがありません。「メンバー」タブから名前を追加してください。
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            state.members.forEach((name, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80';
+
+                if (state.batchType === 'normal') {
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-bold text-slate-800">${name}</td>
+                        <td class="py-2.5 px-3">
+                            <input type="text" id="b-time-${idx}" placeholder="例: 1830" onblur="formatSmartTimeInput(this); updateBatchRowPace(${idx})" oninput="updateBatchRowPace(${idx})" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        </td>
+                        <td class="py-2.5 px-3 font-bold text-teal-700 text-xs" id="b-res-${idx}">-</td>
+                        <td class="py-2.5 px-3">
+                            <select id="b-cond-${idx}" class="bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1 text-xs">
+                                <option value="良好">$D83D$DFE2 良好</option>
+                                <option value="普通">$D83D$DFE1 普通</option>
+                                <option value="不調">$D83D$DFE0 不調</option>
+                                <option value="けが">$D83D$DD34 けが</option>
+                            </select>
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <input type="text" id="b-memo-${idx}" placeholder="メモ" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs w-full">
+                        </td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-bold text-slate-800">${name}</td>
+                        <td class="py-2.5 px-3">
+                            <div class="space-y-1">
+                                <input type="text" id="b-int-times-${idx}" placeholder="本数タイム(スペース区切り: 70 69 68)" onblur="updateBatchRowIntervalPace(${idx})" oninput="updateBatchRowIntervalPace(${idx})" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-full focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-3 font-bold text-teal-700 text-xs" id="b-res-${idx}">-</td>
+                        <td class="py-2.5 px-3">
+                            <select id="b-cond-${idx}" class="bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1 text-xs">
+                                <option value="良好">$D83D$DFE2 良好</option>
+                                <option value="普通">$D83D$DFE1 普通</option>
+                                <option value="不調">$D83D$DFE0 不調</option>
+                                <option value="けが">$D83D$DD34 けが</option>
+                            </select>
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <input type="text" id="b-memo-${idx}" placeholder="メモ" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs w-full">
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateBatchRowPace(idx) {
+            const dist = parseFloat(document.getElementById('batch-distance').value) || 0;
+            const timeVal = document.getElementById(`b-time-${idx}`).value;
+            const sec = parseTimeToSeconds(timeVal);
+            document.getElementById(`b-res-${idx}`).textContent = calculatePace(dist, sec);
+        }
+
+        function updateBatchRowIntervalPace(idx) {
+            const singleDist = parseFloat(document.getElementById('batch-distance').value) || 0;
+            const val = document.getElementById(`b-int-times-${idx}`).value.trim();
+            if (!val) {
+                document.getElementById(`b-res-${idx}`).textContent = '-';
+                return;
+            }
+
+            const parts = val.split(/\s+/);
+            let totalSec = 0;
+            let count = 0;
+
+            parts.forEach(p => {
+                let s = parseTimeToSeconds(p);
+                if (s > 0) {
+                    totalSec += s;
+                    count++;
+                }
+            });
+
+            const totalDist = singleDist * count;
+            const pace = calculatePace(totalDist, totalSec);
+            document.getElementById(`b-res-${idx}`).textContent = `${count}本 (${formatSecondsToTimeStr(totalSec)}) / ${pace}`;
+        }
+
+        function handleBatchSubmit() {
+            const date = document.getElementById('batch-date').value;
+            const menu = document.getElementById('batch-menu').value.trim();
+            const distanceInput = parseFloat(document.getElementById('batch-distance').value) || 0;
+
+            if (!date || !menu || distanceInput <= 0) {
+                showToast('日付、メニュー名、有効な距離を設定してください。', 'error');
+                return;
+            }
+
+            let count = 0;
+            state.members.forEach((name, idx) => {
+                const condition = document.getElementById(`b-cond-${idx}`).value;
+                const comment = document.getElementById(`b-memo-${idx}`).value.trim();
+
+                if (state.batchType === 'normal') {
+                    const timeVal = document.getElementById(`b-time-${idx}`).value.trim();
+                    if (timeVal) {
+                        let sec = parseTimeToSeconds(timeVal);
+                        state.records.unshift({
+                            id: 'rec_batch_' + Date.now() + '_' + idx,
+                            date,
+                            name,
+                            type: 'normal',
+                            menu,
+                            distance: distanceInput,
+                            timeSec: sec,
+                            timeStr: formatSecondsToTimeStr(sec),
+                            paceStr: calculatePace(distanceInput, sec),
+                            condition,
+                            comment
+                        });
+                        count++;
+                    }
+                } else {
+                    const val = document.getElementById(`b-int-times-${idx}`).value.trim();
+                    if (val) {
+                        const parts = val.split(/\s+/);
+                        let intervalTimes = [];
+                        let intervalSecs = [];
+                        let totalSec = 0;
+
+                        parts.forEach(p => {
+                            let s = parseTimeToSeconds(p);
+                            if (s > 0) {
+                                intervalSecs.push(s);
+                                intervalTimes.push(formatSecondsToTimeStr(s));
+                                totalSec += s;
+                            }
+                        });
+
+                        const totalDist = distanceInput * intervalSecs.length;
+                        state.records.unshift({
+                            id: 'rec_batch_' + Date.now() + '_' + idx,
+                            date,
+                            name,
+                            type: 'interval',
+                            menu,
+                            singleDist: distanceInput,
+                            intervalTimes,
+                            intervalSecs,
+                            distance: totalDist,
+                            timeSec: totalSec,
+                            timeStr: formatSecondsToTimeStr(totalSec),
+                            paceStr: calculatePace(totalDist, totalSec),
+                            condition,
+                            comment
+                        });
+                        count++;
+                    }
+                }
+            });
+
+            if (count === 0) {
+                showToast('タイムが入力されたメンバーがいません。', 'error');
+                return;
+            }
+
+            syncStorage();
+            updateUI();
+            showToast(`${count}名分の記録を一括登録しました！`, 'success');
+            switchTab('records');
+        }
+
+        function renderStatistics() {
+            document.getElementById('stat-total-records').innerHTML = `${state.records.length} <span class="text-xs font-normal text-slate-500">件</span>`;
+            const totalDist = state.records.reduce((sum, r) => sum + (parseFloat(r.distance) || 0), 0);
+            document.getElementById('stat-total-distance').innerHTML = `${totalDist.toFixed(1)} <span class="text-xs font-normal text-slate-500">km</span>`;
+            document.getElementById('stat-total-members').innerHTML = `${state.members.length} <span class="text-xs font-normal text-slate-500">名</span>`;
+        }
+
+        function renderAlertBanner() {
+            const latestMap = {};
+            [...state.records].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+                if (!latestMap[r.name]) latestMap[r.name] = r.condition;
+            });
+
+            const unhealty = Object.entries(latestMap)
+                .filter(([n, cond]) => cond === '不調' || cond === 'けが')
+                .map(([n, cond]) => `${n}(${cond})`);
+
+            const topBadge = document.getElementById('alert-badge-top');
+            const mobBadge = document.getElementById('alert-badge-mob');
+            const banner = document.getElementById('alert-banner');
+
+            if (unhealty.length > 0) {
+                topBadge.textContent = unhealty.length;
+                topBadge.classList.remove('hidden');
+                mobBadge.textContent = unhealty.length;
+                mobBadge.classList.remove('hidden');
+                banner.classList.remove('hidden');
+                document.getElementById('alert-banner-text').textContent = `要注意メンバー: ${unhealty.join(', ')}`;
+            } else {
+                topBadge.classList.add('hidden');
+                mobBadge.classList.add('hidden');
+                banner.classList.add('hidden');
+            }
+        }
+
+        function renderQuickTags() {
+            const container = document.getElementById('quick-tag-container');
+            if (state.members.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 italic">メンバー未登録</span>`;
+                return;
+            }
+            container.innerHTML = '';
+            state.members.forEach(name => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'text-[11px] bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 px-2 py-0.5 rounded-lg border border-slate-200 transition-all';
+                btn.textContent = name;
+                btn.onclick = () => { document.getElementById('rec-name').value = name; };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderMemberDatalist() {
+            const dl = document.getElementById('member-datalist');
+            dl.innerHTML = '';
+            state.members.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                dl.appendChild(opt);
+            });
+        }
+
+        function renderConditionCards() {
+            const container = document.getElementById('condition-cards-container');
+            container.innerHTML = '';
+
+            if (state.members.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-10 text-xs text-slate-400 border border-slate-100 rounded-2xl bg-slate-50/50">
+                        メンバーが登録されていません。
+                    </div>
+                `;
+                return;
+            }
+
+            const latestMap = {};
+            [...state.records].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+                if (!latestMap[r.name]) latestMap[r.name] = r;
+            });
+
+            state.members.forEach(name => {
+                const latest = latestMap[name] || { condition: '良好', date: '記録なし', menu: '-' };
+                let badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                if (latest.condition === '普通') badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                if (latest.condition === '不調') badgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
+                if (latest.condition === 'けが') badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">${name}</h4>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full border font-bold ${badgeClass}">${latest.condition}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500">最終記録: ${latest.date}</div>
+                    <div class="text-xs bg-white p-2 rounded-xl border border-slate-100 font-medium text-slate-700">${latest.menu}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderRankingTable() {
+            const tbody = document.getElementById('ranking-table-body');
+            tbody.innerHTML = '';
+
+            const ttRecords = state.records.filter(r => {
+                const m = r.menu.toLowerCase();
+                return m.includes('2.6') || (r.distance >= 2.5 && r.distance <= 2.7);
+            });
+
+            const bestMap = {};
+            ttRecords.forEach(r => {
+                if (!bestMap[r.name] || r.timeSec < bestMap[r.name].timeSec) {
+                    bestMap[r.name] = r;
+                }
+            });
+
+            const ranking = Object.values(bestMap).sort((a, b) => a.timeSec - b.timeSec);
+
+            if (ranking.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-xs text-slate-400">2.6km TTのタイム記録がまだありません。</td></tr>`;
+                return;
+            }
+
+            ranking.forEach((r, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-center font-bold text-xs">${idx + 1}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-800">${r.name}</td>
+                    <td class="py-2.5 px-3 font-black text-emerald-700">${r.timeStr}</td>
+                    <td class="py-2.5 px-3 text-slate-600">${r.paceStr}</td>
+                    <td class="py-2.5 px-3 text-xs text-slate-400">${r.date}</td>
+                    <td class="py-2.5 px-3 text-xs text-slate-500">${r.comment || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function runCalculator() {
+            const dist = parseFloat(document.getElementById('calc-distance').value) || 0;
+            const timeVal = document.getElementById('calc-time').value;
+            const sec = parseTimeToSeconds(timeVal);
+
+            const pace = calculatePace(dist, sec);
+            document.getElementById('calc-result-pace').textContent = pace;
+
+            let speed = sec > 0 && dist > 0 ? (dist / (sec / 3600)).toFixed(2) : '0';
+            document.getElementById('calc-result-speed').textContent = `${speed} km/h`;
+
+            const secPerKm = dist > 0 ? sec / dist : 0;
+            const targets = [
+                { name: '1 km', d: 1 },
+                { name: '2.6 km TT', d: 2.6 },
+                { name: '5 km', d: 5 },
+                { name: '10 km', d: 10 },
+                { name: 'ハーフマラソン', d: 21.0975 }
+            ];
+
+            const tbody = document.getElementById('estimation-table-body');
+            tbody.innerHTML = '';
+            targets.forEach(t => {
+                const estSec = Math.round(secPerKm * t.d);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 px-3 font-medium text-slate-700">${t.name}</td>
+                    <td class="py-2 px-3 font-bold text-cyan-700">${secPerKm > 0 ? formatSecondsToTimeStr(estSec) : '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderMembersGrid() {
+            const container = document.getElementById('members-grid-container');
+            container.innerHTML = '';
+
+            if (state.members.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-xs text-slate-400 border border-slate-100 rounded-xl">
+                        メンバーが登録されていません。上のフォームから登録してください。
+                    </div>
+                `;
+                return;
+            }
+
+            state.members.forEach((name, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center';
+                card.innerHTML = `
+                    <span class="font-bold text-slate-800 text-xs">${idx + 1}. ${name}</span>
+                    ${state.isAdmin ? `<button onclick="deleteMember('${name}')" class="text-rose-500 hover:text-rose-700 text-xs"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function handleAddMember(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-member-name');
+            const name = input.value.trim();
+            if (!name) return;
+            if (state.members.includes(name)) {
+                showToast('既に存在するメンバー名です。', 'error');
+                return;
+            }
+            state.members.push(name);
+            input.value = '';
+            syncStorage();
+            updateUI();
+            showToast(`メンバー「${name}」を追加しました。`, 'success');
+        }
+
+        function deleteMember(name) {
+            if (confirm(`メンバー「${name}」を削除しますか？`)) {
+                state.members = state.members.filter(m => m !== name);
+                syncStorage();
+                updateUI();
+                showToast('メンバーを削除しました。', 'success');
+            }
+        }
+
+        function deleteRecord(id) {
+            if (confirm('この記録を削除してもよろしいですか？')) {
+                state.records = state.records.filter(r => r.id !== id);
+                syncStorage();
+                updateUI();
+                showToast('記録を削除しました。', 'success');
+            }
+        }
+
+        // タブ切り替え
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-content-${tabId}`)?.classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all text-white hover:bg-white/10";
+            });
+            const activeDesktop = document.getElementById(`nav-${tabId}`);
+            if (activeDesktop) activeDesktop.className = "tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-sm";
+
+            document.querySelectorAll('.mob-tab-btn').forEach(btn => {
+                btn.className = "mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold text-white hover:bg-white/10";
+            });
+            const activeMob = document.getElementById(`mob-nav-${tabId}`);
+            if (activeMob) activeMob.className = "mob-tab-btn whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold bg-white text-emerald-800 shadow-sm";
+
+            updateUI();
+        }
+
+        // 管理者認証
+        function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
+        
+        function verifyAdminLogin() {
+            const input = document.getElementById('admin-password-input').value;
+            if (input === 'admin') {
+                state.isAdmin = true;
+                syncStorage();
+                updateUI();
+                document.getElementById('admin-password-input').value = '';
+                document.getElementById('admin-login-view').classList.add('hidden');
+                document.getElementById('admin-logout-view').classList.remove('hidden');
+                showToast('管理者モードに移行しました', 'success');
+            } else {
+                showToast('パスワードが違います (admin)', 'error');
+            }
+        }
+
+        function handleAdminLogout() {
+            state.isAdmin = false;
+            syncStorage();
+            updateUI();
+            document.getElementById('admin-login-view').classList.remove('hidden');
+            document.getElementById('admin-logout-view').classList.add('hidden');
+            closeAdminModal();
+            showToast('管理者モードを終了しました', 'success');
+        }
+
+        function updateAdminUIState() {
+            const badge = document.getElementById('admin-status-badge');
+            const text = document.getElementById('admin-btn-text');
+            const loginView = document.getElementById('admin-login-view');
+            const logoutView = document.getElementById('admin-logout-view');
+
+            if (state.isAdmin) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                text.textContent = '管理者モード';
+                loginView.classList.add('hidden');
+                logoutView.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                text.textContent = '管理者ログイン';
+                loginView.classList.remove('hidden');
+                logoutView.classList.add('hidden');
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-rose-600' : 'bg-emerald-600';
+            toast.className = `${bg} text-white px-3.5 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 transition-all transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
